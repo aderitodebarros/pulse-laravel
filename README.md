@@ -26,7 +26,7 @@ and require `bifrost-mz/pulse-laravel:@dev`. Configure only the application's `.
 
 ```dotenv
 PULSE_URL=https://pulse.bifrost.co.mz
-PULSE_KEY=ps_sk_YOUR_SERVER_KEY
+PULSE_KEY=ps_sk_YOUR_SECRET_KEY
 PULSE_PUBLIC_KEY=ps_pk_live_YOUR_PUBLIC_KEY
 PULSE_ENVIRONMENT=production
 ```
@@ -50,6 +50,30 @@ identifier is limited to 60 characters to remain compatible with deployed server
 The full installed version is also available through `Pulse\Laravel\Client::version()`.
 
 ## Configuration
+
+### Obtain the two credentials
+
+In Pulse, select the workspace and project, then create a public key in **Chaves**.
+Allow the host and port of the client application; an empty allowlist blocks browser
+requests. The public-key copy button copies the token for `PULSE_PUBLIC_KEY`.
+In the same row's menu, choose **Gerar chave secreta** and confirm. The normal secret
+has `feedbacks:create` and `errors:create`; copy it once into `PULSE_KEY` using your
+backend secret manager. Only its hash is stored by Pulse. Never put this token in
+frontend variables, URLs, source control or support screenshots.
+
+The secret status is not generated, active, expired or revoked. New and regenerated
+secrets expire after 90 days by default; the issue modal displays the actual expiry
+and permissions. A lost secret cannot be recovered. Regenerating it invalidates the
+old value and preserves its permissions; update the client configuration immediately.
+Regenerating only the public key leaves the secret unchanged. Revoking the secret
+leaves the public key unchanged; **Revogar ambas as chaves** disables both credentials
+in that row. Cancelling a confirmation does not change credentials.
+
+Do not use the dedicated CI secret generated in Projects for `PULSE_KEY`: its only
+permission is `sourcemaps:write`, not `errors:create`. CI credentials do not appear
+in the widget installation picker. A workspace contains the team and subscription;
+a project identifies the client application. Feedback is assigned from the
+authenticated key's project, not from a project ID supplied in a request body.
 
 Both keys must belong to the same Pulse project. The secret needs `errors:create`;
 the public key must allow the application's origin. The environment must exist in
@@ -128,3 +152,49 @@ request time if the application's policy requires nonces. No inline executable
 JavaScript is injected. Remote assets and custom elements retain their existing
 technical names for server compatibility. Remote project privacy settings still
 govern collection; installation never grants additional collection permissions.
+
+## Troubleshooting
+
+### Widget not visible
+
+1. Check `PULSE_ENABLED=true`, `PULSE_WIDGET_ENABLED=true`, a valid active
+   `PULSE_PUBLIC_KEY`, and the correct `PULSE_URL`. Use HTTPS except on localhost.
+   The SDK does not create credentials or allow domains on your behalf.
+2. Allow the application's actual host and port in Pulse. Preview domains and
+   `localhost:3000` are separate origins. Never use a secret or CI credential as
+   the widget key, and do not open CORS globally to bypass an origin error.
+3. After editing `.env`, run `php artisan config:clear` in the client application.
+   Rebuild configuration with `php artisan config:cache` during deployment and
+   restart long-running application processes, including queue workers when used.
+4. Inspect the original HTML for `pulse-sdk-config` and check the Network panel for
+   `/_pulse/sdk.js` and the remote Pulse assets. Only the public key belongs in this
+   configuration. If the local script route is missing, check package discovery
+   and rebuild the client application's route cache during deployment.
+5. Injection requires a full HTML response containing `</body>`. JSON, downloads,
+   streams, ordinary AJAX requests, Livewire partials, `up` and `_pulse/*` are
+   excluded. A separately hosted SPA does not receive injected HTML from Laravel.
+   Do not initialize the browser SDK manually alongside the automatic integration.
+6. If scripts load but the widget is hidden, check allowed/blocked page paths and
+   the stored widget configuration. Check CSP violations and use the nonce setting
+   described above when required; do not disable the application's CSP.
+
+### Events not arriving
+
+- `401`: check credential type, exact value, secret expiry and revocation. Update
+  the relevant client secret/configuration after regenerating a key.
+- `403`: check browser origins or backend permissions. CI secrets cannot submit
+  feedback or error events.
+- `422` for errors: inspect validation fields and verify that `PULSE_ENVIRONMENT`
+  exists in the project. Both client keys must identify the same project.
+- `429`: respect rate limits and the retry interval provided by the server.
+- Browser errors need `PULSE_BROWSER_ERRORS_ENABLED=true`; backend reports need
+  `PULSE_KEY` with `errors:create`. A 500 response without a reportable exception
+  does not generate an incident by itself.
+- HTTP mode is best-effort and deliberately preserves the original application
+  response on delivery failure. Queue mode requires a worker consuming the exact
+  configured connection and queue. Inspect `failed_jobs`; do not delete jobs to
+  diagnose a problem.
+
+For support, share the SDK/PHP/Laravel versions, a sanitized URL, status code,
+environment, application release and request ID when available. Use synthetic data
+and redact secrets. Never share a complete `.env` file.
