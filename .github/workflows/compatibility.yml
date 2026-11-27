@@ -1,0 +1,63 @@
+name: Compatibility
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.1'
+            laravel: '10'
+            legacy: true
+          - php: '8.2'
+            laravel: '10'
+            legacy: true
+          - php: '8.2'
+            laravel: '11'
+            legacy: true
+          - php: '8.2'
+            laravel: '12'
+            legacy: false
+          - php: '8.3'
+            laravel: '13'
+            legacy: false
+          - php: '8.4'
+            laravel: '13'
+            legacy: false
+    env:
+      # EOL frameworks are tested only in disposable, credential-free applications.
+      COMPOSER_POLICY_ADVISORIES_BLOCK: ${{ matrix.legacy && '0' || '1' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, mbstring, pdo_sqlite
+          tools: composer:v2
+          coverage: none
+      - name: Validate package
+        run: composer validate --strict
+      - name: Install in a fresh Laravel application
+        run: |
+          composer create-project laravel/laravel "$RUNNER_TEMP/pulse-consumer" '${{ matrix.laravel }}.*' --no-install --no-scripts --no-interaction
+          composer --working-dir="$RUNNER_TEMP/pulse-consumer" config repositories.pulse path "$GITHUB_WORKSPACE"
+          composer --working-dir="$RUNNER_TEMP/pulse-consumer" require bifrost/pulse-laravel:@dev --no-scripts --no-interaction --prefer-dist
+          composer --working-dir="$RUNNER_TEMP/pulse-consumer" dump-autoload --no-interaction
+      - name: Verify automatic installation and transports
+        run: php tests/compatibility.php "$RUNNER_TEMP/pulse-consumer"
+      - name: Report legacy dependency advisories
+        if: matrix.legacy
+        continue-on-error: true
+        run: composer --working-dir="$RUNNER_TEMP/pulse-consumer" audit --format=table

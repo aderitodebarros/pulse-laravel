@@ -8,7 +8,7 @@
         "issues": "https://github.com/aderitodebarros/pulse-laravel/issues",
         "source": "https://github.com/aderitodebarros/pulse-laravel"
     },
-    "require": { "php": "^8.3", "ext-dom": "*", "ext-mbstring": "*", "laravel/framework": "^11.0|^12.0|^13.0" },
+    "require": { "php": "^8.1", "ext-dom": "*", "ext-mbstring": "*", "laravel/framework": "^10.0|^11.0|^12.0|^13.0" },
     "autoload": { "psr-4": { "Pulse\\Laravel\\": "src/" }, "files": ["src/compat.php"] },
     "extra": { "laravel": { "providers": ["Pulse\\Laravel\\PulseServiceProvider"] } }
 }

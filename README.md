@@ -1,6 +1,21 @@
 # bifrost/pulse-laravel
 
-Laravel 11-13 / PHP 8.3+. After publication:
+Laravel 10-13 / PHP 8.1+. The application must also satisfy Laravel's PHP requirements:
+
+| PHP | Laravel |
+| --- | --- |
+| 8.1 | 10 |
+| 8.2 | 10, 11, 12 |
+| 8.3 | 10, 11, 12, 13 |
+| 8.4 | 11, 12, 13 |
+
+Legacy compatibility is not a recommendation to run unsupported software. PHP 8.1,
+Laravel 10 and Laravel 11 are end-of-life; upgrade the host application when possible.
+The compatibility workflow exercises real PHP/Laravel combinations in disposable
+applications. Only legacy test jobs permit known vulnerable dependency versions;
+their security advisories remain visible. No consumer security settings are changed.
+
+After publication:
 
 ```sh
 composer require bifrost/pulse-laravel
