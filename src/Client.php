@@ -2,6 +2,7 @@
 
 namespace Pulse\Laravel;
 
+use Composer\InstalledVersions;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Throwable;
 
 class Client
 {
+    private const PACKAGE = 'bifrost-mz/pulse-laravel';
+
     private \WeakMap $reported;
 
     public array $context = [];
@@ -20,6 +23,15 @@ class Client
     public function __construct()
     {
         $this->reported = new \WeakMap;
+    }
+
+    public static function version(): string
+    {
+        if (! class_exists(InstalledVersions::class) || ! InstalledVersions::isInstalled(self::PACKAGE)) {
+            return 'unknown';
+        }
+
+        return InstalledVersions::getPrettyVersion(self::PACKAGE) ?: 'unknown';
     }
 
     public function captureException(Throwable $error, array $context = []): ?string
@@ -61,7 +73,8 @@ class Client
             'occurred_at' => now()->toIso8601String(), 'release' => config('pulse-sdk.release'),
             'context' => $this->context + ($context['context'] ?? []),
             'diagnostics' => ($context['diagnostics'] ?? []) + $this->diagnostics + [
-                'runtime' => ['php' => PHP_VERSION, 'framework' => 'Laravel '.Application::VERSION, 'sdk' => 'bifrost-mz/pulse-laravel'],
+                'runtime' => ['php' => PHP_VERSION, 'framework' => 'Laravel '.Application::VERSION,
+                    'sdk' => mb_substr(self::PACKAGE.'@'.self::version(), 0, 60)],
             ],
         ];
         if (isset($this->diagnostics['request']['url'])) {

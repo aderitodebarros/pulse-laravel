@@ -1,5 +1,6 @@
 <?php
 
+use Composer\InstalledVersions;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -28,6 +29,7 @@ foreach ([
     'PULSE_KEY' => 'ps_sk_PRIVATE_TEST',
     'PULSE_PUBLIC_KEY' => 'ps_pk_live_PUBLIC_TEST',
     'PULSE_ENVIRONMENT' => 'production',
+    'PULSE_RELEASE' => 'client-release-test',
     'PULSE_TRANSPORT' => 'http',
 ] as $name => $value) {
     putenv($name.'='.$value);
@@ -108,6 +110,9 @@ $recorded = Http::recorded();
 verify($recorded->count() === 1, 'CLI delivery must work without a worker.');
 $payload = $recorded->first()[0]->data();
 verify($payload['event_id'] === $eventId, 'Delivery changed the event UUID.');
+verify(Client::version() === InstalledVersions::getPrettyVersion('bifrost-mz/pulse-laravel'), 'The installed SDK version is incorrect.');
+verify($payload['diagnostics']['runtime']['sdk'] === mb_substr('bifrost-mz/pulse-laravel@'.Client::version(), 0, 60), 'SDK version metadata was lost.');
+verify($payload['release'] === 'client-release-test', 'The SDK version replaced the application release.');
 verify(! str_contains(json_encode($payload), 'PRIVATE'), 'CLI diagnostics exposed a secret.');
 
 $request = Request::create('http://localhost/pulse-smoke/handled');
@@ -124,4 +129,4 @@ Http::fake(fn () => throw new RuntimeException('Transport unavailable'));
 verify((new Client)->captureException(new RuntimeException('Original failure')) !== null, 'Transport failure replaced exception capture.');
 verify(is_a('PulseServer\\Laravel\\SendError', SendError::class, true), 'Previously queued job names are not compatible.');
 
-echo json_encode(['php' => PHP_VERSION, 'laravel' => $app::VERSION, 'result' => 'passed'], JSON_THROW_ON_ERROR).PHP_EOL;
+echo json_encode(['php' => PHP_VERSION, 'laravel' => $app::VERSION, 'sdk' => Client::version(), 'result' => 'passed'], JSON_THROW_ON_ERROR).PHP_EOL;

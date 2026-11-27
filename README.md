@@ -15,13 +15,13 @@ The compatibility workflow exercises real PHP/Laravel combinations in disposable
 applications. Only legacy test jobs permit known vulnerable dependency versions;
 their security advisories remain visible. No consumer security settings are changed.
 
-After publication:
+## Installation
 
 ```sh
 composer require bifrost-mz/pulse-laravel
 ```
 
-Before publication use a Composer path repository pointing to this directory
+For development, use a Composer path repository pointing to this directory
 and require `bifrost-mz/pulse-laravel:@dev`. Configure only the application's `.env`:
 
 ```dotenv
@@ -30,6 +30,26 @@ PULSE_KEY=ps_sk_YOUR_SERVER_KEY
 PULSE_PUBLIC_KEY=ps_pk_live_YOUR_PUBLIC_KEY
 PULSE_ENVIRONMENT=production
 ```
+
+## Versions
+
+Releases follow semantic versioning and are published as Git tags, starting with
+`v1.0.0`. See [CHANGELOG.md](CHANGELOG.md) for release notes. Composer resolves the
+installed version from the tag; composer.json deliberately has no version field.
+
+Events keep three different version identifiers:
+- `diagnostics.runtime.php`: the actual PHP runtime.
+- `diagnostics.runtime.framework`: the actual Laravel version.
+- `diagnostics.runtime.sdk`: the package and its installed Composer version,
+  for example `bifrost-mz/pulse-laravel@v1.0.0` or `@dev-main`.
+
+`PULSE_RELEASE` identifies your application's deployment, not the SDK. Set it in
+your deployment environment when you need release-based investigation. Code loaded
+outside Composer reports `@unknown` rather than inventing an SDK version. The SDK
+identifier is limited to 60 characters to remain compatible with deployed servers.
+The full installed version is also available through `Pulse\Laravel\Client::version()`.
+
+## Configuration
 
 Both keys must belong to the same Pulse project. The secret needs `errors:create`;
 the public key must allow the application's origin. The environment must exist in
