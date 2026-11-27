@@ -61,7 +61,7 @@ class Client
             'occurred_at' => now()->toIso8601String(), 'release' => config('pulse-sdk.release'),
             'context' => $this->context + ($context['context'] ?? []),
             'diagnostics' => ($context['diagnostics'] ?? []) + $this->diagnostics + [
-                'runtime' => ['php' => PHP_VERSION, 'framework' => 'Laravel '.Application::VERSION, 'sdk' => 'bifrost/pulse-laravel'],
+                'runtime' => ['php' => PHP_VERSION, 'framework' => 'Laravel '.Application::VERSION, 'sdk' => 'bifrost-mz/pulse-laravel'],
             ],
         ];
         if (isset($this->diagnostics['request']['url'])) {

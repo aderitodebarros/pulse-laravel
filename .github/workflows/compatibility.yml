@@ -53,7 +53,7 @@ jobs:
         run: |
           composer create-project laravel/laravel "$RUNNER_TEMP/pulse-consumer" '${{ matrix.laravel }}.*' --no-install --no-scripts --no-interaction
           composer --working-dir="$RUNNER_TEMP/pulse-consumer" config repositories.pulse path "$GITHUB_WORKSPACE"
-          composer --working-dir="$RUNNER_TEMP/pulse-consumer" require bifrost/pulse-laravel:@dev --no-scripts --no-interaction --prefer-dist
+          composer --working-dir="$RUNNER_TEMP/pulse-consumer" require bifrost-mz/pulse-laravel:@dev --no-scripts --no-interaction --prefer-dist
           composer --working-dir="$RUNNER_TEMP/pulse-consumer" dump-autoload --no-interaction
       - name: Verify automatic installation and transports
         run: php tests/compatibility.php "$RUNNER_TEMP/pulse-consumer"

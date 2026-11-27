@@ -1,4 +1,4 @@
-# bifrost/pulse-laravel
+# bifrost-mz/pulse-laravel
 
 Laravel 10-13 / PHP 8.1+. The application must also satisfy Laravel's PHP requirements:
 
@@ -18,11 +18,11 @@ their security advisories remain visible. No consumer security settings are chan
 After publication:
 
 ```sh
-composer require bifrost/pulse-laravel
+composer require bifrost-mz/pulse-laravel
 ```
 
 Before publication use a Composer path repository pointing to this directory
-and require `bifrost/pulse-laravel:@dev`. Configure only the application's `.env`:
+and require `bifrost-mz/pulse-laravel:@dev`. Configure only the application's `.env`:
 
 ```dotenv
 PULSE_URL=https://pulse.bifrost.co.mz
